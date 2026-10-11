@@ -1,0 +1,41 @@
+/* Two new full-screen chapters follow the retained Berd section rhythm. */
+.oaki-full-panel{display:grid;min-height:100svh;content-visibility:visible;contain-intrinsic-size:auto}
+.oaki-exhibition{grid-template-columns:minmax(260px,27%) minmax(0,1fr);gap:clamp(22px,3.2vw,60px);align-items:start;align-content:center;padding:88px clamp(24px,3.5vw,70px) 42px;background:radial-gradient(circle,var(--dot) var(--dot-size),transparent var(--dot-size)) 0 0/var(--grid-x) var(--grid-y),var(--paper);color:var(--ink)}
+.oaki-panel-heading{align-self:start;position:relative;z-index:2}
+.oaki-panel-heading h2{font-weight:400;letter-spacing:-.06em;font-size:clamp(48px,6vw,108px);line-height:.93;margin:0 0 24px}
+.oaki-panel-heading h2 em{font-style:normal;color:#777b77}
+.oaki-panel-heading p{font-size:clamp(15px,1.2vw,19px);line-height:1.35;letter-spacing:-.02em;max-width:320px;margin:0}
+.oaki-carousel{min-width:0;align-self:start;display:flex;flex-direction:column;gap:14px}
+.oaki-carousel-viewport{width:100%;overflow:hidden;border-radius:4px;touch-action:pan-y;box-shadow:0 16px 34px rgba(5,5,5,.08)}
+.oaki-carousel-track{display:flex;will-change:transform;transition:transform .72s cubic-bezier(.16,1,.3,1)}
+.oaki-ex-slide{flex:0 0 100%;min-width:0;position:relative;background:#e3e3df}
+.oaki-ex-media{display:block;width:100%;aspect-ratio:16/9;object-fit:contain;background:#f5f1e9}
+.oaki-ex-video{object-fit:cover;background:#f5f1e9}
+.oaki-ex-placeholder{position:relative;width:100%;aspect-ratio:16/10;background:linear-gradient(135deg,#c8cac7,#b6b9b6 52%,#d2d3d0);display:grid;place-items:center;overflow:hidden;color:#626763}
+.oaki-ex-placeholder::before{content:"";position:absolute;inset:16px;border:1px solid rgba(255,255,255,.4)}
+.oaki-ex-placeholder::after{content:"";position:absolute;width:min(60%,450px);aspect-ratio:1;border:1px solid rgba(255,255,255,.22);border-radius:50%;box-shadow:0 0 0 40px rgba(255,255,255,.045),0 0 0 100px rgba(255,255,255,.035);transform:rotate(-18deg)}
+.oaki-ex-placeholder>strong{position:relative;z-index:2;font-size:clamp(30px,5vw,78px);font-weight:500;line-height:.92;letter-spacing:-.065em;text-align:center;opacity:.58}
+.oaki-carousel-controls{display:flex;align-items:center;gap:20px;min-height:48px}
+.oaki-carousel-dots{display:flex;gap:7px;margin-left:auto}
+.oaki-carousel-dots button{width:7px;height:7px;border:0;border-radius:50%;padding:0;background:#adb0aa;transition:width .25s,background .25s}
+.oaki-carousel-dots button[aria-current="true"]{background:#151515;width:25px;border-radius:10px}
+.oaki-carousel-arrows{display:flex;gap:5px}
+.oaki-carousel-arrows button{width:42px;height:42px;border:1px solid #777;border-radius:50%;background:transparent;font-size:21px;line-height:1;transition:background .2s,color .2s,transform .2s}
+.oaki-carousel-arrows button:hover,.oaki-carousel-arrows button:focus-visible{background:#111;color:white;transform:scale(1.04)}
+.oaki-rooftop{position:relative;isolation:isolate;grid-template-columns:minmax(260px,29%) minmax(0,1fr);gap:clamp(24px,4vw,70px);align-items:start;align-content:center;padding:85px clamp(24px,3.5vw,70px) 60px;background:#202220 url('assets/rooftop-background.webp') center/cover no-repeat;color:#f2f2ed}
+.oaki-rooftop::before{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(90deg,rgba(0,0,0,.76),rgba(0,0,0,.52) 42%,rgba(0,0,0,.43));pointer-events:none}
+.oaki-rooftop>*{position:relative;z-index:1}
+.oaki-rooftop-intro h2{font-weight:400;font-size:clamp(56px,6.6vw,116px);line-height:.9;letter-spacing:-.07em;margin:0 0 22px}
+@media(min-width:901px){html[lang="zh-CN"] .oaki-panel-heading h2,html[lang="zh-CN"] .oaki-rooftop-intro h2{font-size:clamp(56px,5vw,82px);line-height:1.04;letter-spacing:-.045em}}
+html[lang="zh-CN"] .oaki-panel-heading h2{white-space:pre-line}
+.oaki-rooftop-intro p{font-size:clamp(15px,1.2vw,19px);line-height:1.35;max-width:330px;letter-spacing:-.02em}
+.oaki-film-frame{position:relative;width:100%;aspect-ratio:16/9;background:#171717;overflow:hidden;border:0;border-radius:4px;box-shadow:0 25px 70px rgba(0,0,0,.35)}
+.oaki-rooftop-video{display:block;width:100%;height:100%;object-fit:cover}
+.oaki-film-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:grid;place-items:center;padding-left:5px;width:84px;height:84px;border:1px solid rgba(255,255,255,.8);border-radius:50%;color:#fff;background:rgba(0,0,0,.3);font-size:27px;cursor:pointer;transition:background .2s,transform .2s}
+.oaki-film-play:hover,.oaki-film-play:focus-visible{background:rgba(0,0,0,.55);transform:translate(-50%,-50%) scale(1.06)}
+.oaki-film-frame.is-playing .oaki-film-play{display:none}
+.oaki-film-bottom{position:absolute;left:35px;right:35px;bottom:30px;display:flex;align-items:center;justify-content:flex-end;gap:20px;font-family:"Cash Sans Mono",ui-monospace,monospace;font-size:11px;letter-spacing:.08em}
+.oaki-film-bottom::after{content:"";position:absolute;bottom:-12px;left:0;right:0;height:1px;background:rgba(255,255,255,.46)}
+@media(max-width:900px){.oaki-exhibition,.oaki-rooftop{grid-template-columns:1fr;align-content:center;gap:24px;padding:72px 22px 46px}.oaki-panel-heading h2,.oaki-rooftop-intro h2{font-size:clamp(44px,9vw,76px);margin:0 0 14px}.oaki-panel-heading p,.oaki-rooftop-intro p{max-width:660px}.oaki-ex-placeholder{aspect-ratio:16/9}.oaki-film-frame{aspect-ratio:16/9}}
+@media(max-width:600px){.oaki-exhibition,.oaki-rooftop{padding:58px 16px 36px;gap:19px}.oaki-panel-heading h2,.oaki-rooftop-intro h2{font-size:clamp(42px,12vw,60px);line-height:.92}.oaki-panel-heading p,.oaki-rooftop-intro p{font-size:14px;line-height:1.3}.oaki-ex-placeholder{aspect-ratio:1/1.12}.oaki-ex-placeholder>strong{font-size:clamp(28px,9vw,50px)}.oaki-carousel-controls{gap:9px}.oaki-carousel-dots{gap:5px}.oaki-carousel-dots button{width:5px;height:5px}.oaki-carousel-dots button[aria-current="true"]{width:16px}.oaki-carousel-arrows button{width:34px;height:34px;font-size:17px}.oaki-film-frame{aspect-ratio:16/9}.oaki-film-bottom{left:24px;right:24px;bottom:24px}}
+@media(prefers-reduced-motion:reduce){.oaki-carousel-track{transition:none}.oaki-carousel-arrows button,.oaki-carousel-dots button{transition:none}}

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Oaki 3D character</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent}
+  body.standalone{background:#d4d4d4}
+  #stage{position:relative;width:100%;height:100%;isolation:isolate}
+  canvas{display:block;width:100%;height:100%;opacity:0;transition:opacity .55s ease;touch-action:none}
+  body.is-ready canvas{opacity:1}
+  #status{position:absolute;left:50%;bottom:9%;transform:translateX(-50%);font:10px ui-monospace,monospace;letter-spacing:.14em;color:#aaa;white-space:nowrap}
+  body.is-ready #status{opacity:0;pointer-events:none}
+  @media(prefers-reduced-motion:reduce){canvas{transition:none}}
+</style>
+<script type="importmap">
+{"imports":{"three":"./vendor/three/three.module.js","three/addons/":"./vendor/three/addons/"}}
+</script>
+</head>
+<body>
+<div id="stage"><div id="status" role="status">LOADING OAKI…</div></div>
+<script>if(window.top===window.self)document.body.classList.add('standalone')</script>
+<script type="module" src="oaki-model.js"></script>
+</body>
+</html>

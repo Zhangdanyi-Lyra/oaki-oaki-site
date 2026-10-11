@@ -1,0 +1,916 @@
+/* ============================================================================
+   Interactive hero app replica ("Berd in the browser").
+
+   Replaces the static Berd.png screenshot inside .hero-app-preview with a
+   live, 1:1 replica of the Berd desktop app home screen. All values below
+   are lifted from the real app's design tokens (globals.css + component
+   recipes):
+
+   - canvas #f5f5f5, dot #cbcbcb, foreground #242424, muted-fg #666666
+   - sidebar row hover  = foreground @ 2% alpha, active = 3% alpha
+   - top-bar buttons dim to 70% opacity on hover
+   - composer action buttons #e5e5e5 -> hover #cccccc
+   - panel glass: white @ 78% + blur(18px) saturate(180%), radius 18px
+   - widget settle spring: 380ms cubic-bezier(0.34, 1.56, 0.64, 1)
+
+   Layout lives in a fixed 1440x1024 "design space" (the geometry of the
+   original Berd.png mock) and is scaled to the preview box with a CSS
+   transform, so it stays pixel-faithful at every viewport size.
+   ========================================================================= */
+
+@font-face {
+  font-family: "Inter var";
+  src: url("https://berd.xyz/sites/berd/assets/hero-app/fonts/Inter-var.ttf") format("truetype-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+.hero-app-preview.is-interactive {
+  /* The static mock was pointer-events: none; the live app takes input. */
+  pointer-events: auto;
+}
+
+.hero-app {
+  --ha-fg: #242424;
+  --ha-canvas: #f5f5f5;
+  --ha-dot: #cbcbcb;
+  --ha-muted: #f0f0f0;
+  --ha-muted-fg: #666666;
+  --ha-faint-fg: #a6a6a6;
+  --ha-border: #e8e8e8;
+  --ha-card-glass: rgba(255, 255, 255, 0.78);
+  --ha-row-hover: rgba(36, 36, 36, 0.02);
+  --ha-row-active: rgba(36, 36, 36, 0.03);
+  --ha-composer-action: #e5e5e5;
+  --ha-composer-action-hover: #cccccc;
+  --ha-sticky-pink: #eec2ea;
+  --ha-scale: 1;
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1440px;
+  height: 1024px;
+  transform: translate(-50%, -50%) scale(var(--ha-scale));
+  font-family: "Inter var", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ha-fg);
+  background-color: var(--ha-canvas);
+  background-image: radial-gradient(circle, var(--ha-dot) 1.2px, transparent 1.2px);
+  background-size: 37px 37px;
+  background-position: 22px 31px;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+
+.hero-app *,
+.hero-app *::before,
+.hero-app *::after {
+  box-sizing: border-box;
+}
+
+.hero-app button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
+   Top bar — 52px logical bar; ghost icon buttons dim to 70% on hover
+   (app token --app-top-bar-control-hover-opacity: 0.7).
+   ------------------------------------------------------------------------ */
+
+.ha-topbar {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 67px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+}
+
+.ha-traffic {
+  display: flex;
+  gap: 12px;
+  margin-left: 24px;
+  margin-right: 18px;
+}
+
+.ha-traffic span {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+}
+
+.ha-traffic span:nth-child(1) { background: #ff5f57; }
+.ha-traffic span:nth-child(2) { background: #febc2e; }
+.ha-traffic span:nth-child(3) { background: #28c840; }
+
+.ha-topbar__btn {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-right: 4px;
+  color: var(--ha-fg);
+  transition: opacity 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ha-topbar__btn:hover,
+.ha-topbar__btn:active {
+  opacity: 0.7;
+}
+
+.ha-topbar__btn svg {
+  width: 19px;
+  height: 19px;
+}
+
+.ha-berd-icon {
+  width: 21px;
+  height: 21px;
+  background-color: var(--ha-fg);
+  -webkit-mask-image: url("https://berd.xyz/sites/berd/assets/hero-app/berd-icon-mask.png");
+  mask-image: url("https://berd.xyz/sites/berd/assets/hero-app/berd-icon-mask.png");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.ha-topbar__spacer { flex: 1; }
+
+.ha-topbar__right {
+  display: flex;
+  gap: 8px;
+  margin-right: 20px;
+}
+
+/* --------------------------------------------------------------------------
+   Sidebar — glass panel (white @ 78% + blur), 18px radius. Rows are 28px
+   tall with 12px radius; hover fill is foreground @ 2% alpha, active 3%,
+   250ms ease-in-out (app sidebar-tokens.ts).
+   ------------------------------------------------------------------------ */
+
+.ha-sidebar {
+  position: absolute;
+  left: 24px;
+  top: 62px;
+  width: 241px;
+  height: 406px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px;
+  background: var(--ha-card-glass);
+  -webkit-backdrop-filter: blur(18px) saturate(180%) brightness(1.02);
+  backdrop-filter: blur(18px) saturate(180%) brightness(1.02);
+  transition: box-shadow 300ms ease;
+}
+
+.ha-sidebar:hover {
+  box-shadow: 30px 42px 60px rgba(0, 0, 0, 0.05);
+}
+
+.ha-sidebar__search {
+  position: relative;
+  margin: 14px 12px 8px;
+}
+
+.ha-sidebar__search svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  transform: translateY(-50%);
+  color: rgba(102, 102, 102, 0.55);
+  pointer-events: none;
+  transition: color 250ms ease-in-out;
+}
+
+.ha-sidebar__search input {
+  width: 100%;
+  height: 28px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  padding: 0 10px 0 34px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ha-muted-fg);
+  outline: none;
+  transition: background-color 250ms ease-in-out;
+}
+
+.ha-sidebar__search input::placeholder {
+  color: rgba(102, 102, 102, 0.55);
+  transition: color 250ms ease-in-out;
+}
+
+.ha-sidebar__search:hover input,
+.ha-sidebar__search input:focus {
+  background: rgba(240, 240, 240, 0.6);
+}
+
+.ha-sidebar__search:hover svg,
+.ha-sidebar__search:focus-within svg {
+  color: var(--ha-muted-fg);
+}
+
+.ha-sidebar__search:hover input::placeholder,
+.ha-sidebar__search input:focus::placeholder {
+  color: var(--ha-muted-fg);
+}
+
+.ha-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  padding: 0 12px;
+}
+
+/* Scoped to beat the shared .hero-app button reset and preserve the app's
+   intended navigation padding/alignment. */
+.hero-app .ha-nav-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ha-fg);
+  text-align: left;
+  width: 100%;
+  transition: background-color 250ms ease-in-out, color 250ms ease-in-out;
+}
+
+.ha-nav-row svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.ha-nav-row:hover {
+  background: var(--ha-row-hover);
+}
+
+.ha-nav-row.is-active,
+.ha-nav-row.is-active:hover {
+  background: var(--ha-row-active);
+}
+
+.ha-nav-row--ghost {
+  color: var(--ha-faint-fg);
+}
+
+.ha-nav-row--ghost:hover {
+  color: var(--ha-muted-fg);
+}
+
+.ha-nav-label {
+  padding: 14px 12px 2px;
+  font-size: 14px;
+  color: var(--ha-faint-fg);
+}
+
+.ha-sidebar__bottom {
+  margin-top: auto;
+  padding: 0 12px 10px;
+}
+
+.ha-sidebar__divider {
+  height: 1px;
+  margin: 0 12px 8px;
+  background: rgba(232, 232, 232, 0.7);
+}
+
+/* --------------------------------------------------------------------------
+   Canvas widgets — draggable, 3px drag threshold like the app
+   (WIDGET_DRAG_THRESHOLD_PX = 3), settle spring on drop.
+   ------------------------------------------------------------------------ */
+
+.ha-widget {
+  position: absolute;
+  touch-action: none;
+}
+
+.ha-widget[data-draggable] {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+}
+
+.ha-widget.is-dragging {
+  cursor: grabbing;
+  z-index: 9 !important;
+}
+
+.ha-widget.is-settling {
+  animation: ha-widget-settle 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes ha-widget-settle {
+  from { transform: scale(0.97); }
+  to { transform: scale(1); }
+}
+
+.ha-widget.is-entering {
+  animation: ha-widget-enter 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes ha-widget-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Character pins: alpha webm loops with a hover name pill (app AgentPinWidget). */
+
+.ha-pin video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* App AgentPinWidget label: bottom-1 + constant translate-y-2, so the pill
+   sits low over the character's feet; hover only fades opacity. */
+.ha-pin__label {
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%) translateY(8px);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 6px 18px rgba(0, 0, 0, 0.1);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+}
+
+.ha-pin:hover .ha-pin__label,
+.ha-pin.is-dragging .ha-pin__label {
+  opacity: 1;
+}
+
+/* The 3D project cube — the app's real renderer inside an iframe embed.
+   The iframe captures its own pointer events for the drag-to-spin
+   OrbitControls. */
+
+.ha-cube {
+  z-index: 1;
+}
+
+.ha-cube iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color-scheme: light;
+  /* The parent widget captures pointer moves (like the app's home widget)
+     and posts motion impulses into the embed. */
+  pointer-events: none;
+}
+
+/* Clock widget. */
+
+.ha-clock {
+  z-index: 2;
+}
+
+.ha-clock svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Starter task list — sticky-note card (the mock ships the pink variant).
+   Hover: row text goes medium + arrow appears (app StarterTaskList).
+   ------------------------------------------------------------------------ */
+
+.ha-tasks {
+  z-index: 2;
+  border-radius: 6px;
+  background: var(--ha-sticky-pink);
+  padding: 8px 14px 14px;
+  font-size: 13px;
+  color: #262626;
+}
+
+.ha-tasks__header {
+  display: flex;
+  align-items: center;
+  min-height: 26px;
+}
+
+.ha-tasks__title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ha-tasks__close {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-right: -6px;
+  border-radius: 999px;
+  color: #262626;
+  transition: background-color 200ms ease;
+}
+
+.ha-tasks__close:hover {
+  background: rgba(38, 38, 38, 0.08);
+}
+
+.ha-tasks__close svg {
+  width: 12px;
+  height: 12px;
+}
+
+.ha-tasks ul {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ha-task {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 8px;
+  min-height: 26px;
+  padding: 0 4px;
+  text-align: left;
+  width: 100%;
+  border-radius: 4px;
+}
+
+.ha-task__check {
+  display: grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1.5px solid rgba(38, 38, 38, 0.55);
+}
+
+.ha-task__check svg {
+  width: 10px;
+  height: 10px;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.ha-task.is-done .ha-task__check svg {
+  opacity: 1;
+}
+
+.ha-task__label {
+  transition: font-weight 100ms ease;
+}
+
+.ha-task:hover .ha-task__label {
+  font-weight: 500;
+}
+
+.ha-task.is-done .ha-task__label {
+  text-decoration: line-through;
+  color: rgba(38, 38, 38, 0.62);
+}
+
+.ha-task__arrow {
+  width: 13px;
+  height: 13px;
+  justify-self: center;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.ha-task:hover .ha-task__arrow {
+  opacity: 1;
+}
+
+.ha-tasks.is-closing {
+  animation: ha-tasks-out 260ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes ha-tasks-out {
+  to {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Chat composer pill — 40px-radius glass pill; hover lifts a soft shadow
+   and brightens the placeholder; circular gray action buttons darken on
+   hover (app GlobalComposerPill + ComposerActionButton recipes).
+   ------------------------------------------------------------------------ */
+
+.ha-composer {
+  position: absolute;
+  left: 937px;
+  top: 933px;
+  width: 479px;
+  height: 67px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px 8px 26px;
+  border-radius: 40px;
+  background: var(--ha-card-glass);
+  -webkit-backdrop-filter: blur(18px) saturate(180%) brightness(1.04);
+  backdrop-filter: blur(18px) saturate(180%) brightness(1.04);
+  transition: box-shadow 300ms ease;
+}
+
+.ha-composer:hover,
+.ha-composer:focus-within {
+  box-shadow: 30px 24px 52px rgba(0, 0, 0, 0.07);
+}
+
+.ha-composer input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 15px;
+  color: var(--ha-fg);
+  outline: none;
+}
+
+.ha-composer input::placeholder {
+  color: rgba(36, 36, 36, 0.4);
+  transition: color 250ms ease;
+}
+
+.ha-composer:hover input::placeholder,
+.ha-composer input:focus::placeholder {
+  color: var(--ha-fg);
+}
+
+/* Scoped to preserve the gray composer action-pill background against the
+   shared .hero-app button reset. */
+.hero-app .ha-composer__btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--ha-composer-action);
+  color: var(--ha-fg);
+  transition: background-color 200ms ease, transform 150ms ease;
+}
+
+.ha-composer__btn:hover {
+  background: var(--ha-composer-action-hover);
+}
+
+.ha-composer__btn:active {
+  transform: scale(0.94);
+}
+
+.ha-composer__btn svg {
+  width: 17px;
+  height: 17px;
+}
+
+.ha-composer__btn.is-sent svg {
+  animation: ha-send-hop 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes ha-send-hop {
+  0% { transform: translateY(0); }
+  35% { transform: translateY(-14px); opacity: 0; }
+  36% { transform: translateY(14px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ha-widget.is-settling,
+  .ha-widget.is-entering,
+  .ha-composer__btn.is-sent svg {
+    animation: none;
+  }
+}
+
+/* In-hero loading sequence: the real page is visible immediately while the
+   Berd app frame carries the loading story. */
+.site { opacity: 1; }
+
+.ha-home {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: none;
+  pointer-events: none;
+  transition: opacity 0.7s ease, visibility 0s linear 0.7s;
+}
+
+.hero-app.is-home-visible .ha-home {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+
+/* Home pieces settle in just after the canvas appears. */
+.ha-home .ha-topbar,
+.ha-home .ha-sidebar,
+.ha-home .ha-widget,
+.ha-home .ha-composer {
+  opacity: 0;
+  transform: none;
+  transition: opacity 0.58s ease;
+}
+
+.hero-app.is-home-visible .ha-topbar,
+.hero-app.is-home-visible .ha-sidebar,
+.hero-app.is-home-visible .ha-widget,
+.hero-app.is-home-visible .ha-composer {
+  opacity: 1;
+  transform: none;
+}
+
+.hero-app.is-home-visible .ha-topbar { transition-delay: 60ms; }
+.hero-app.is-home-visible .ha-sidebar { transition-delay: 120ms; }
+.hero-app.is-home-visible .ha-cube { transition-delay: 180ms; }
+.hero-app.is-home-visible .ha-pin { transition-delay: 240ms; }
+.hero-app.is-home-visible .ha-clock { transition-delay: 300ms; }
+.hero-app.is-home-visible .ha-tasks { transition-delay: 360ms; }
+.hero-app.is-home-visible .ha-composer { transition-delay: 420ms; }
+
+.ha-loader {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: var(--ha-canvas);
+  background-image: radial-gradient(circle, var(--ha-dot) 1.2px, transparent 1.2px);
+  background-size: 37px 37px;
+  background-position: 22px 31px;
+  opacity: 1;
+  transition: opacity 0.55s ease, visibility 0.55s;
+}
+
+.ha-window-traffic {
+  position: absolute;
+  top: 27px;
+  left: 0;
+  z-index: 101;
+}
+
+.ha-loader__logo,
+.ha-loader__message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.ha-loader__logo {
+  width: 112px;
+  height: 112px;
+  color: #242424;
+  opacity: 0;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.hero-app.is-loader-logo .ha-loader__logo { opacity: 1; }
+
+.ha-loader__logo .berd-logo__mark,
+.ha-loader__logo svg {
+  display: block;
+  width: 112px !important;
+  height: 112px !important;
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+}
+
+.ha-loader__message {
+  width: max-content;
+  margin: 0;
+  color: #242424;
+  /* The app is scaled down from a 1440px design canvas; 40 logical pixels
+     lands at roughly the original loader's 34px on-screen size. */
+  font-size: 60px;
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  opacity: 1;
+  transform: translate(-50%, -50%);
+}
+
+.hero-app.is-loader-message .ha-loader__logo {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.92);
+}
+
+.hero-app.is-home-visible .ha-loader {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* The surrounding cast arrives with the app instead of delaying first paint. */
+.bounce-gloopy,
+.hero-karaoke-ball,
+.torus-hint {
+  opacity: 0;
+}
+
+.bounce-gloopy > video,
+.bounce-gloopy > img {
+  transform: scale(0.18);
+  transform-origin: center;
+}
+
+body.hero-cast-visible .bounce-gloopy {
+  opacity: 1;
+  transition: opacity 0.75s ease var(--hero-cast-delay, 0ms);
+}
+
+body.hero-cast-visible .bounce-gloopy > video,
+body.hero-cast-visible .bounce-gloopy > img {
+  transform: scale(1);
+  transition: transform 1.15s cubic-bezier(0.16, 1, 0.3, 1) var(--hero-cast-delay, 0ms);
+}
+
+body.hero-cast-visible .bounce-gloopy:nth-child(1) { --hero-cast-delay: 0ms; }
+body.hero-cast-visible .bounce-gloopy:nth-child(2) { --hero-cast-delay: 45ms; }
+body.hero-cast-visible .bounce-gloopy:nth-child(3) { --hero-cast-delay: 90ms; }
+body.hero-cast-visible .bounce-gloopy:nth-child(4) { --hero-cast-delay: 135ms; }
+body.hero-cast-visible .bounce-gloopy:nth-child(5) { --hero-cast-delay: 180ms; }
+body.hero-cast-visible .bounce-gloopy:nth-child(6) { --hero-cast-delay: 225ms; }
+body.hero-cast-visible .bounce-gloopy:nth-child(7) { --hero-cast-delay: 270ms; }
+body.hero-cast-visible .bounce-gloopy:nth-child(8) { --hero-cast-delay: 315ms; }
+body.hero-cast-visible .bounce-gloopy:nth-child(9) { --hero-cast-delay: 360ms; }
+body.hero-cast-visible .bounce-gloopy:nth-child(n + 10) { --hero-cast-delay: 405ms; }
+body.hero-cast-visible .bounce-gloopy:nth-child(15) { --hero-cast-delay: 450ms; }
+body.hero-cast-visible .bounce-gloopy:nth-child(16) { --hero-cast-delay: 495ms; }
+body.hero-cast-visible .bounce-gloopy:nth-child(17) { --hero-cast-delay: 540ms; }
+body.hero-cast-visible .bounce-gloopy:nth-child(18) { --hero-cast-delay: 585ms; }
+body.hero-cast-visible .bounce-gloopy:nth-child(19) { --hero-cast-delay: 630ms; }
+
+body.hero-cast-visible .hero-karaoke-ball,
+body.hero-cast-visible .torus-hint {
+  opacity: var(--hero-hint-opacity, 1);
+  transition: opacity 0.7s ease 520ms;
+}
+
+@media (max-width: 900px) {
+  /* Mobile-only: make the loader tagline twice its previous size. The app
+     canvas scales down as a unit, so this remains contained in the frame. */
+  .ha-loader__message {
+    width: 760px;
+    font-size: 120px;
+    line-height: 0.95;
+    text-align: center;
+    white-space: normal;
+  }
+
+  /* Mobile cast bursts out from the center rather than cascading top-down. */
+  .bounce-gloopy > video,
+  .bounce-gloopy > img {
+    transform: translate(var(--hero-cast-from-x, 0), var(--hero-cast-from-y, 0)) scale(0.08);
+  }
+  body.hero-cast-visible .bounce-gloopy > video,
+  body.hero-cast-visible .bounce-gloopy > img {
+    transform: translate(0, 0) scale(1);
+    transition-duration: 1.15s;
+    transition-delay: 0ms;
+  }
+  body.hero-cast-visible .bounce-gloopy {
+    transition-delay: 0ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ha-home,
+  .ha-loader,
+  .ha-loader__logo,
+  .ha-loader__message,
+  .bounce-gloopy,
+  .hero-karaoke-ball,
+  .torus-hint {
+    transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
+  }
+}
+
+/* Club mode — the Don't Click Here easter egg. Keep this after the loader/home
+   reveal rules so club-mode visibility wins once the app is ready. */
+.ha-club {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 320ms ease, visibility 320ms;
+}
+
+.hero-app.is-club-mode .ha-club {
+  opacity: 1;
+  visibility: visible;
+}
+
+.ha-club__scene {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.ha-club__scene.is-zooming {
+  animation: ha-club-push-in var(--ha-shot-zoom-duration, 9s) linear forwards;
+}
+
+@keyframes ha-club-push-in {
+  from { transform: var(--ha-shot-from); }
+  to { transform: var(--ha-shot-to); }
+}
+
+.hero-app .ha-club__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-app .ha-club__gloopy {
+  position: absolute;
+  height: auto;
+  filter: drop-shadow(0 18px 26px rgba(0, 0, 0, 0.45));
+}
+
+.hero-app.is-club-mode .ha-cube,
+.hero-app.is-club-mode .ha-pin,
+.hero-app.is-club-mode .ha-tasks {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none;
+}
+
+.hero-app.is-club-mode .ha-topbar__btn { color: #f5f5f5; }
+.hero-app.is-club-mode .ha-berd-icon { background-color: #f5f5f5; }
+
+.hero-app .ha-clock__disco {
+  position: absolute;
+  /* The source includes a long transparent chain above the sphere. Its visible
+     ball is 343px wide inside a 346px-wide frame, so slightly oversize and
+     offset the video to make that ball replace the 165px clock face exactly. */
+  left: -0.96px;
+  bottom: -28.4px;
+  display: none;
+  width: 166.5px;
+  max-width: none;
+  height: auto;
+  filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.5));
+}
+
+.hero-app.is-club-mode .ha-clock svg { display: none; }
+.hero-app.is-club-mode .ha-clock__disco { display: block; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ha-club__scene.is-zooming { animation: none; }
+}

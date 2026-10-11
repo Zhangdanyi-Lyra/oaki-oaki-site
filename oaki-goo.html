@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Oaki jelly image</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+canvas.is-dragging{cursor:grabbing}
+@media(pointer:fine){html,body,canvas{cursor:none!important}}
+.cursor{position:fixed;z-index:2;top:0;left:0;width:16px;height:16px;border-radius:3px;background:#fff;mix-blend-mode:difference;pointer-events:none;opacity:0;transform:translate(-100px,-100px);transition:opacity .12s}
+@media(pointer:coarse){.cursor{display:none}}
+</style>
+</head>
+<body>
+<canvas id="jelly" aria-label="Move or drag to stretch Oaki, then watch it bounce back"></canvas>
+<div class="cursor" aria-hidden="true"></div>
+<script>
+(() => {
+  const canvas=document.querySelector('#jelly');
+  const cursor=document.querySelector('.cursor');
+  const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const gl=canvas.getContext('webgl',{alpha:false,antialias:true,premultipliedAlpha:false});
+  if(!gl){canvas.style.opacity='0';return}
+
+  // The photo is mapped to a grid. Pointer movement pushes nearby vertices;
+  // springs, neighbor coupling and damping return the mesh to rest.
+  const vertexSource='attribute vec2 a_position;attribute vec2 a_uv;varying vec2 v_uv;void main(){v_uv=a_uv;gl_Position=vec4(a_position,0.0,1.0);}';
+  const fragmentSource='precision mediump float;varying vec2 v_uv;uniform sampler2D u_image;uniform vec2 u_scale;void main(){vec2 uv=(v_uv-0.5)/u_scale+0.5;vec4 photo=texture2D(u_image,uv);vec3 bg=vec3(0.702,1.0,0.443);gl_FragColor=vec4(mix(bg,photo.rgb,photo.a),1.0);}';
+  function shader(type,source){
+    const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);
+    if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  }
+  let program;
+  try{
+    program=gl.createProgram();
+    gl.attachShader(program,shader(gl.VERTEX_SHADER,vertexSource));
+    gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fragmentSource));
+    gl.linkProgram(program);
+    if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(program));
+  }catch(error){canvas.style.opacity='0';return}
+  gl.useProgram(program);
+  const positionLocation=gl.getAttribLocation(program,'a_position');
+  const uvLocation=gl.getAttribLocation(program,'a_uv');
+  const scaleLocation=gl.getUniformLocation(program,'u_scale');
+  const positionBuffer=gl.createBuffer(),uvBuffer=gl.createBuffer(),indexBuffer=gl.createBuffer();
+  const texture=gl.createTexture();
+  const image=new Image();
+  image.src='assets/footer-golden-oaki.png';
+  let ready=false,width=0,height=0,cols=0,rows=0,positions,uvs,indices,offsetX,offsetY,velocityX,velocityY;
+  let frame=0,lastTime=0,down=false,lastPointer=null,pointerInside=false;
+
+  function resize(){
+    width=canvas.clientWidth;height=canvas.clientHeight;
+    if(!width||!height)return;
+    const dpr=Math.min(devicePixelRatio||1,1.5);
+    canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);
+    gl.viewport(0,0,canvas.width,canvas.height);
+    cols=Math.max(32,Math.min(64,Math.round(width/25)));
+    rows=Math.max(22,Math.min(46,Math.round(height/25)));
+    const size=(cols+1)*(rows+1);
+    positions=new Float32Array(size*2);uvs=new Float32Array(size*2);
+    offsetX=new Float32Array(size);offsetY=new Float32Array(size);
+    velocityX=new Float32Array(size);velocityY=new Float32Array(size);
+    const triangles=[];
+    for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){
+      const i=y*(cols+1)+x;
+      uvs[i*2]=x/cols;uvs[i*2+1]=1-y/rows;
+      if(x<cols&&y<rows){
+        const a=i,b=i+1,c=i+cols+1,d=c+1;
+        triangles.push(a,c,b,b,c,d);
+      }
+    }
+    indices=new Uint16Array(triangles);
+    gl.bindBuffer(gl.ARRAY_BUFFER,uvBuffer);gl.bufferData(gl.ARRAY_BUFFER,uvs,gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices,gl.STATIC_DRAW);
+    if(ready)render();
+  }
+  function render(){
+    if(!ready||!width||!height)return;
+    for(let y=0;y<=rows;y++)for(let x=0;x<=cols;x++){
+      const i=y*(cols+1)+x;
+      positions[i*2]=(x/cols*width+offsetX[i])/width*2-1;
+      positions[i*2+1]=1-(y/rows*height+offsetY[i])/height*2;
+    }
+    gl.clearColor(.702,1,.443,1);gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.bindBuffer(gl.ARRAY_BUFFER,positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER,positions,gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(positionLocation);
+    gl.vertexAttribPointer(positionLocation,2,gl.FLOAT,false,0,0);
+    gl.bindBuffer(gl.ARRAY_BUFFER,uvBuffer);
+    gl.enableVertexAttribArray(uvLocation);
+    gl.vertexAttribPointer(uvLocation,2,gl.FLOAT,false,0,0);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indexBuffer);
+    const cover=Math.max(width/image.width,height/image.height);
+    gl.uniform2f(scaleLocation,image.width*cover/width,image.height*cover/height);
+    gl.drawElements(gl.TRIANGLES,indices.length,gl.UNSIGNED_SHORT,0);
+  }
+  function tick(now){
+    frame=0;
+    const step=Math.min(2,(now-(lastTime||now))/16.67||1);
+    lastTime=now;
+    let activity=0;
+    for(let y=1;y<rows;y++)for(let x=1;x<cols;x++){
+      const i=y*(cols+1)+x;
+      const neighborX=(offsetX[i-1]+offsetX[i+1]+offsetX[i-cols-1]+offsetX[i+cols+1])*.25;
+      const neighborY=(offsetY[i-1]+offsetY[i+1]+offsetY[i-cols-1]+offsetY[i+cols+1])*.25;
+      velocityX[i]+=(neighborX-offsetX[i])*.095*step-offsetX[i]*.027*step;
+      velocityY[i]+=(neighborY-offsetY[i])*.095*step-offsetY[i]*.027*step;
+      velocityX[i]*=Math.pow(.89,step);velocityY[i]*=Math.pow(.89,step);
+      offsetX[i]+=velocityX[i]*step;offsetY[i]+=velocityY[i]*step;
+      activity+=Math.abs(offsetX[i])+Math.abs(offsetY[i])+Math.abs(velocityX[i])+Math.abs(velocityY[i]);
+    }
+    render();
+    if(activity>2)frame=requestAnimationFrame(tick);
+    else lastTime=0;
+  }
+  function start(){if(!frame)frame=requestAnimationFrame(tick)}
+  function push(x,y,dx,dy,multiplier){
+    const radius=Math.max(125,Math.min(width,height)*.26),radiusSq=radius*radius;
+    for(let gy=1;gy<rows;gy++)for(let gx=1;gx<cols;gx++){
+      const i=gy*(cols+1)+gx,px=gx/cols*width,py=gy/rows*height;
+      const distanceSq=(px-x)**2+(py-y)**2;
+      if(distanceSq>radiusSq*4)continue;
+      const influence=Math.exp(-distanceSq/radiusSq*2.8)*multiplier;
+      velocityX[i]+=dx*influence;velocityY[i]+=dy*influence;
+    }
+    start();
+  }
+  const notifyParent=inside=>parent.postMessage({type:'berd:goo-cursor-presence',inside},location.origin);
+  canvas.addEventListener('pointerdown',event=>{
+    down=true;canvas.setPointerCapture(event.pointerId);canvas.classList.add('is-dragging');
+    lastPointer={x:event.clientX,y:event.clientY};
+  });
+  canvas.addEventListener('pointermove',event=>{
+    if(!pointerInside){pointerInside=true;notifyParent(true)}
+    cursor.style.opacity='1';
+    cursor.style.transform='translate3d('+event.clientX+'px,'+event.clientY+'px,0) translate(-50%,-50%)';
+    if(lastPointer&&!reducedMotion){
+      const dx=Math.max(-32,Math.min(32,event.clientX-lastPointer.x));
+      const dy=Math.max(-32,Math.min(32,event.clientY-lastPointer.y));
+      if(Math.abs(dx)+Math.abs(dy)>1)push(event.clientX,event.clientY,dx,dy,down?.45:.27);
+    }
+    lastPointer={x:event.clientX,y:event.clientY};
+  },{passive:true});
+  function release(){down=false;canvas.classList.remove('is-dragging');if(!reducedMotion)start()}
+  canvas.addEventListener('pointerup',release);
+  canvas.addEventListener('pointercancel',release);
+  canvas.addEventListener('lostpointercapture',release);
+  canvas.addEventListener('pointerleave',()=>{
+    lastPointer=null;cursor.style.opacity='0';
+    if(pointerInside){pointerInside=false;notifyParent(false)}
+  });
+  image.onload=()=>{
+    gl.bindTexture(gl.TEXTURE_2D,texture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+    ready=true;resize();
+  };
+  image.onerror=()=>canvas.style.opacity='0';
+  addEventListener('resize',resize);
+  canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();canvas.style.opacity='0';cancelAnimationFrame(frame);frame=0});
+})();
+</script>
+</body>
+</html>

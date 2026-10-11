@@ -1,0 +1,62 @@
+/* Oaki content layer over Berd's exact captured layout and motion system. */
+@font-face{font-family:"Oaki Source Han Serif";src:url("assets/source-han-serif-oaki-bold.otf") format("opentype");font-style:normal;font-weight:700;font-display:swap}
+@font-face{font-family:"Oaki Source Han Sans";src:url("assets/source-han-sans-oaki-bold.otf") format("opentype");font-style:normal;font-weight:700;font-display:swap}
+.bird-logo{width:auto;height:36px;overflow:visible;display:inline-flex;align-items:center;justify-content:flex-start}
+.oaki-wordmark{display:inline-flex;align-items:baseline;gap:.3em;font-size:30px;line-height:1;white-space:nowrap;color:currentColor}
+.oaki-wordmark__serif{font-family:"Oaki Source Han Serif",serif;font-weight:700;font-style:italic;letter-spacing:-.065em}
+.oaki-wordmark__sans{font-family:"Oaki Source Han Sans",sans-serif;font-weight:700;letter-spacing:-.07em}
+.built-by{font-size:11px;letter-spacing:-.025em}
+.built-by::after{content:'✳';font-size:14px;margin-left:2px}
+.ha-berd-icon{background:none!important;-webkit-mask:none!important;mask:none!important;display:grid;place-items:center;width:28px!important;height:21px!important}
+.ha-berd-icon::after{content:'o!';font-size:15px;font-weight:700;letter-spacing:-.09em;color:var(--ha-fg)}
+.bounce-gloopy video,.ha-widget video,.agent-portrait{object-fit:contain!important}
+.bounce-gloopy video{filter:drop-shadow(0 18px 18px rgba(39,28,24,.13))}
+.panel--bounce{margin-bottom:0}
+.panel--started{padding-top:clamp(48px,9svh,120px);padding-bottom:calc(7vh + 28svh)}
+.panel--started{position:relative;isolation:isolate}
+.started-egg-visual{position:absolute;z-index:0;top:clamp(100px,14svh,160px);left:50%;display:block;width:min(95vw,140svh,1500px);height:auto;transform:translateX(-50%);opacity:0;pointer-events:none;transition:opacity .55s ease}
+.panel--started.is-story-visual-visible .started-egg-visual{opacity:1}
+.panel--started .started-title{position:relative;z-index:1;margin-bottom:clamp(380px,65svh,700px)}
+.panel--started .started-steps{position:relative;z-index:1}
+@media(max-width:900px){.panel--started{padding-bottom:calc(4vh + 40px + 28svh)}}
+@media(max-width:700px){.started-egg-visual{top:clamp(110px,20svh,190px);width:min(180vw,140svh);max-width:none}.panel--started .started-title{margin-bottom:clamp(360px,65svh,620px)}}
+@media(prefers-reduced-motion:reduce){.started-egg-visual{transition:none}}
+.ha-cube iframe{background:transparent}
+.ha-cube{cursor:grab}
+.ha-cube.is-model-dragging{cursor:grabbing}
+.hero-app .ha-club__birthday-video{display:block;width:100%;height:100%;object-fit:cover;object-position:center;pointer-events:none}
+.ha-cube > .ha-cube__plate{position:absolute;z-index:0;left:50%;top:125px;width:1140px;height:auto;max-width:none;object-fit:contain;transform:translateX(-50%);clip-path:none;filter:none;pointer-events:none}
+.ha-cube iframe{position:relative;z-index:1}
+.ha-pin img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 11px 9px rgba(83,52,28,.13))}
+.ha-home .ha-tasks{display:none}
+.ha-sidebar__bottom .ha-nav-row svg{display:none}
+.ha-sidebar__bottom .ha-nav-row::before{content:'✳';width:16px;height:16px;flex:none;display:grid;place-items:center;font-size:16px;line-height:1}
+.oaki-egg{position:absolute;top:0;left:0;padding:0;border:0;background:transparent;appearance:none;cursor:pointer;will-change:transform}
+.oaki-egg__visual{display:block;width:100%;height:100%;background:url('assets/oaki-eggs-sprite.png') var(--egg-x) var(--egg-y)/300% 200% no-repeat;pointer-events:none}
+.oaki-egg:focus-visible{outline:3px solid #f4712a;outline-offset:4px;border-radius:50%}
+@media(prefers-reduced-motion:reduce){.oaki-egg{will-change:auto}}
+@media(max-width:700px){.oaki-egg:nth-child(n+7){display:none}}
+.project-card__visual--logo{background:#a7bbaf!important}
+.project-card__visual--logo .project-berd-logo{width:min(390px,80%);height:auto;aspect-ratio:1.8;overflow:hidden;border-radius:2px;box-shadow:0 18px 40px rgba(0,0,0,.1)}
+.oaki-project-logo{width:100%;height:100%;object-fit:cover;animation:oaki-logo-breathe 3s ease-in-out infinite}
+.project-card__visual--hello{background:#f6f1e7}
+.project-card__visual--stop{background:#fbf7ec}
+.project-card__visual--touch{background:#f8d77a}
+.project-card__visual--exhibition{background:#f4f0e7}
+.project-card__visual--hello img,.project-card__visual--stop img,.project-card__visual--touch img{display:block;width:100%;height:100%;object-fit:contain;visibility:visible}
+.project-card__visual--exhibition img{display:block;width:100%;height:100%;object-fit:contain;visibility:visible}
+.project-card__visual--hello img{object-fit:cover}
+@keyframes oaki-logo-breathe{0%,100%{transform:scale(.93) rotate(-2deg)}50%{transform:scale(1.02) rotate(1deg)}}
+.strawberry-goo{background:#b3ff71!important}
+.strawberry-footer{object-fit:cover;object-position:center;transform:none;opacity:1}
+.strawberry-goo-embed{transform:none}
+.panel--footer::before{background:none;backdrop-filter:none}
+.footer-quote{position:relative;z-index:5;pointer-events:none;color:var(--yellow);text-shadow:none}
+.footer-files-ball{background:#f6edc9;color:#171b0d}
+.footer-files-ball:hover,.footer-files-ball:focus-visible{background:#171b0d;color:#f6edc9}
+.footer-legal,.footer-open-source{color:#171b0d}
+.footer-open-source{color:#171b0d!important}
+body.footer-is-visible .site-chrome .chrome-button,body.footer-is-visible.chrome-on-draw .site-chrome .chrome-button{color:#f6edc9!important;background:#171b0d!important}
+body.footer-is-visible .site-chrome .chrome-button:hover,body.footer-is-visible .site-chrome .chrome-button:focus-visible{color:#171b0d!important;background:#f6edc9!important}
+body.footer-is-visible .built-by{color:#000}
+@media(max-width:700px){.bird-logo{height:29px}.oaki-wordmark{font-size:23px}.built-by{font-size:10px}.strawberry-footer{transform:none}.strawberry-goo-embed{transform:none}}

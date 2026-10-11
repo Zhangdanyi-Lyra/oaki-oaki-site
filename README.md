@@ -1,30 +1,26 @@
 # oaki oaki!
 
-Interactive portfolio website for the Oaki original IP, short film, exhibition concept, and six guardian characters.
+Oaki 的中英文互动网站，包含六款玩偶卡片、故事、日常作品、展览、天台短剧和生日彩蛋。网站素材与运行所需文件均保存在本仓库中。
 
-## Live site
+## 本地运行
 
-https://zhangdanyi-lyra.github.io/oaki-oaki-site/
+在本仓库目录运行：
 
-## Source package
-
-The complete website is stored as split ZIP parts because the media-rich project exceeds GitHub's browser upload limit.
-
-To restore the complete folder:
-
-```bash
-cat oaki-oaki-site.zip.part-* > oaki-oaki-site.zip
-unzip oaki-oaki-site.zip
-```
-
-Verify the archive parts with `SHA256SUMS.txt`.
-
-## Run locally
-
-After restoring the archive:
-
-```bash
+```sh
 python3 -m http.server 8806
 ```
 
-Then open http://127.0.0.1:8806/
+然后打开 http://127.0.0.1:8806/ 。这是静态网站，无需构建步骤。
+
+## 文件说明
+
+- `index.html`：网站入口。
+- `assets/`：图片、六款玩偶透明素材、音频、视频、3D 模型与字体子集。
+- `oaki-*.js`、`oaki-*.css`：网站功能与视觉样式。
+- `berd-original.html_files/`、`vendor/`：页面运行所需的脚本、样式和本地依赖。
+
+可在 GitHub 仓库的 **Code → Download ZIP** 下载完整文件包。
+
+仓库保留网站的完整原始目录结构，文件可直接逐项浏览或整体下载，没有压缩包分卷或切片文件。
+
+部分字体现由原参考站地址加载；加载失败时网站会使用系统字体。
