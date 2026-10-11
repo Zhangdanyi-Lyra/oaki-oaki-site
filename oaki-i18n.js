@@ -23,13 +23,13 @@
     'Feed a worry': '喂 Oaki 一件烦心事',
     'Explore the family map': '探索家族图鉴',
     'Watch Oaki change color': '看看 Oaki 如何变色',
-    'Visit the folded deep sea': '走进折叠的深海',
-    'A world beneath': '日常之下',
-    'the everyday': '藏着另一个世界',
-    'When your desk feels overwhelming, the deep-sea Guardian Agency folds into your world.': '当桌前的一切让你喘不过气，深海守护局便折叠进你的世界。',
+    "Visit Oaki's little world": '走进 Oaki 的小小世界',
+    'A little world': '小小世界',
+    'in the everyday': '藏在日常里',
+    "When your desk feels overwhelming, Oaki's little world opens beside you.": '当桌前的一切让你喘不过气，Oaki 的小小世界便在你身边打开。',
     'Still interns,': '还是实习生，',
     'still here': '却始终在你身边',
-    'The tiny sea slugs keep failing their guardian exams. They come to us anyway.': '这些小海蛞蝓总是考不过守护员考试，却仍一次次向我们走来。',
+    'The little Oaki keep failing their guardian exams. They come to us anyway.': '这些小小 Oaki 总是考不过守护员考试，却仍一次次向我们走来。',
     'Feelings bloom': '感受慢慢',
     'into color': '长成颜色',
     'Oaki absorbs exhaustion, emptiness, breakdowns, and joy. Every feeling leaves a color.': 'Oaki 吸收疲惫、空虚、崩溃与快乐。每一种感受都会留下颜色。',
@@ -50,11 +50,11 @@
     'Step inside the oaki oaki exhibition: five places for stress, rest, and the small comforts in between.': '走进 Oaki Oaki 展览：五个关于压力、休息，以及日常小小慰藉的空间。',
     'A pause': '在城市上方',
     'above the city.': '暂停片刻。',
-    'When work gets too loud, an intern guardian arrives from the folded deep sea — a little late, but with good intentions.': '当工作喧嚣得让人透不过气，一位实习守护员从折叠的深海赶来——虽然迟了点，却带着满满的好意。',
+    'When work gets too loud, an intern guardian turns up beside you — a little late, but with good intentions.': '当工作喧嚣得让人透不过气，一位实习守护员出现在你身边——虽然迟了点，却带着满满的好意。',
     'THE OAKI FAMILY MAP': 'OAKI 家族图鉴',
     'Meet the interns': '认识这些实习生',
     'who keep showing up': '它们总会再次出现',
-    'Six Oaki, six qualities: Fortune, Career, Health, Love, Wisdom, and Courage. Each is a small, sincere intern guardian from the folded deep sea, learning to care in its own way.': '六只 Oaki，六种属性：幸运、事业、健康、爱、智慧和勇气。它们都是来自折叠深海的小小实习守护员，真诚地学习用自己的方式关心你。',
+    'Six Oaki, six qualities: Fortune, Career, Health, Love, Wisdom, and Courage. Each is a small, sincere intern guardian from a little world tucked inside the everyday, learning to care in its own way.': '六只 Oaki，六种属性：幸运、事业、健康、爱、智慧和勇气。它们都是来自日常里那个小小世界的实习守护员，真诚地学习用自己的方式关心你。',
     'OAKI GUARDIAN': 'OAKI 守护员',
     'Good for:': '适合：',
     'Vibes:': '气质：',
@@ -99,9 +99,9 @@
     'Back to top': '返回顶部',
     'A little world of oaki oaki!': 'Oaki Oaki 的小小世界！',
     'Meet the guardians ↗': '认识守护员 ↗',
-    'From the folded': '从折叠的',
-    'deep-sea world': '深海世界',
-    'From the folded deep-sea world': '来自折叠的深海世界',
+    'From the little': '来自日常里的',
+    'world within': '小小世界',
+    'From the little world within': '来自日常里的小小世界',
     'Tell Oaki what happened': '告诉 Oaki 发生了什么',
     'Search chapters': '搜索章节',
     'Search': '搜索',
@@ -200,10 +200,10 @@
       .sort((a, b) => Math.max(0, Math.min(b.rect.bottom, innerHeight) - Math.max(b.rect.top, 0))
         - Math.max(0, Math.min(a.rect.bottom, innerHeight) - Math.max(a.rect.top, 0)))[0];
     document.documentElement.lang = chinese ? 'zh-CN' : 'en';
-    document.title = chinese ? 'oaki oaki! — 深海实习守护员' : 'oaki oaki! — Deep-Sea Intern Guardians';
+    document.title = chinese ? 'oaki oaki! — 日常实习守护员' : 'oaki oaki! — Everyday Intern Guardians';
     document.querySelector('meta[name="description"]')?.setAttribute('content', chinese
-      ? '认识来自折叠深海的 Oaki：笨拙、真诚的实习守护员。'
-      : 'Meet Oaki, the clumsy, sincere intern guardians from a folded deep-sea world.');
+      ? '认识来自日常里小小世界的 Oaki：笨拙、真诚的实习守护员。'
+      : 'Meet Oaki, the clumsy, sincere intern guardians from a little world tucked inside the everyday.');
     originalNodes.forEach((original, node) => {
       const word = original.trim();
       node.nodeValue = chinese && zh[word] ? original.replace(word, zh[word]) : original;
