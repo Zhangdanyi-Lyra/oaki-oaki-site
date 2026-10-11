@@ -26,13 +26,15 @@ jobs:
 
       - name: Rebuild site from split archive
         run: |
-          cat oaki-oaki-site.zip.part-* > oaki-oaki-site.zip
+          cat oaki-oaki-site.zip.chunk-* > oaki-oaki-site.zip
           mkdir _site
           unzip -q oaki-oaki-site.zip -d _site
           rm -rf _site/.git
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
