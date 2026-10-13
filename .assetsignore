@@ -1,0 +1,3 @@
+# Git metadata belongs to the source checkout, not the deployed website.
+.git/
+.git/**
